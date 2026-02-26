@@ -21,6 +21,9 @@ coverage
 /Front/node_modules
 /Server/node_modules
 
+# env
+
+
 # Next.js
 .next/
 out/

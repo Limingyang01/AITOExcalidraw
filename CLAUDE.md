@@ -93,6 +93,15 @@ src/
 - 服务层分离：AI 服务、日志、存储
 - 使用 `any` 类型处理 Excalidraw 复杂类型（因官方类型定义变更频繁）
 
+## Shadcn UI 使用规则
+
+**重要**：优先使用 Shadcn UI 组件，避免重复造轮子。
+
+- 使用 Shadcn UI 组件库：`npx shadcn@latest add [component]`
+- 组件位置：`src/components/ui/`
+- 工具函数：`src/lib/utils.ts`
+- 样式变量在 `globals.css` 中定义，使用 Tailwind 的 `hsl()` 语法
+
 ## API 路由
 
 ### POST /api/chat

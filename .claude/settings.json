@@ -5,7 +5,11 @@
       "Bash(taskkill:*)",
       "Bash(netstat:*)",
       "Bash(tasklist:*)",
-      "Bash(cmd //c:*)"
+      "Bash(cmd //c:*)",
+      "Bash(npm install:*)",
+      "Bash(npx shadcn@latest init -y)",
+      "Bash(npx shadcn@latest init:*)",
+      "Read(//c/Users/leo.li/AppData/Local/Temp/claude/d--extra-project-AITOExcalidraw/tasks/**)"
     ]
   }
 }

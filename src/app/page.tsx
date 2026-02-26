@@ -30,15 +30,15 @@ export default function Home() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       <Header />
 
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        <div style={{ flex: 1, height: '100%' }}>
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', padding: '16px', gap: '16px', backgroundColor: '#f5f5f4' }}>
+        <div style={{ flex: 1, height: '100%', borderRadius: '8px', overflow: 'hidden' }}>
           <Canvas
             newElements={newElements}
             onElementsChange={handleElementsChange}
           />
         </div>
 
-        <div style={{ width: '380px', height: '100%' }}>
+        <div style={{ width: '380px', height: '100%', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e7e5e4', backgroundColor: '#ffffff' }}>
           <ChatPanel onElementsGenerated={handleElementsGenerated} />
         </div>
       </div>
