@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(node:*)",
+      "Bash(python -c:*)",
+      "WebFetch(domain:webllm.mlc.ai)",
+      "WebFetch(domain:github.com)"
+    ]
+  }
+}
