@@ -587,6 +587,7 @@ export default function ChatPanel({
                 display: 'flex',
                 gap: '12px',
                 alignItems: 'flex-start',
+                flexDirection: item.role === 'user' ? 'row-reverse' : 'row',
               }}
             >
               {/* 头像 */}
@@ -615,15 +616,22 @@ export default function ChatPanel({
                 style={{
                   flex: 1,
                   minWidth: 0,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: item.role === 'user' ? 'flex-end' : 'flex-start',
                 }}
               >
                 <div
                   style={{
                     fontSize: '14px',
                     lineHeight: '1.6',
-                    color: '#374151',
                     whiteSpace: 'pre-wrap',
                     wordBreak: 'break-word',
+                    maxWidth: '80%',
+                    padding: '12px 16px',
+                    borderRadius: item.role === 'user' ? '12px 12px 4px 12px' : '12px 12px 12px 4px',
+                    backgroundColor: item.role === 'user' ? '#1c1917' : '#f7f7f8',
+                    color: item.role === 'user' ? '#ffffff' : '#374151',
                   }}
                 >
                   {item.content || (item.role === 'assistant' && isLoading && !error ? '正在思考...' : '')}
@@ -644,16 +652,30 @@ export default function ChatPanel({
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
-                  backgroundColor: '#f7f7f8',
+                  backgroundColor: '#fafaf9',
                   border: '1px solid #e5e7eb',
                 }}
               >
-                <Loader2 size={18} color="#374151" style={{ animation: 'spin 1s linear infinite' }} />
+                <Pencil size={18} color="#374151" />
               </div>
-              <div style={{ display: 'flex', gap: '4px', paddingTop: '8px' }}>
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#9ca3af', animation: 'pulse 1s infinite' }} />
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#9ca3af', animation: 'pulse 1s infinite 0.2s' }} />
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#9ca3af', animation: 'pulse 1s infinite 0.4s' }} />
+              <div
+                style={{
+                  fontSize: '14px',
+                  lineHeight: '1.6',
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                  maxWidth: '80%',
+                  padding: '12px 16px',
+                  borderRadius: '12px 12px 12px 4px',
+                  backgroundColor: '#f7f7f8',
+                  color: '#374151',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
+                <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
+                正在思考...
               </div>
             </div>
           )}
