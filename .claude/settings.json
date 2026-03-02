@@ -9,7 +9,8 @@
       "Bash(npm install:*)",
       "Bash(npx shadcn@latest init -y)",
       "Bash(npx shadcn@latest init:*)",
-      "Read(//c/Users/leo.li/AppData/Local/Temp/claude/d--extra-project-AITOExcalidraw/tasks/**)"
+      "Read(//c/Users/leo.li/AppData/Local/Temp/claude/d--extra-project-AITOExcalidraw/tasks/**)",
+      "Bash(git rm:*)"
     ]
   }
 }
