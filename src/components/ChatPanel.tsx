@@ -31,11 +31,6 @@ interface ChatPanelProps {
   onElementsGenerated?: (elements: Record<string, unknown>[]) => void;
 }
 
-// 生成会话标题
-function generateTitle(content: string): string {
-  return content.slice(0, 20) + (content.length > 20 ? '...' : '');
-}
-
 export default function ChatPanel({
   onElementsGenerated,
 }: ChatPanelProps) {
@@ -154,6 +149,9 @@ export default function ChatPanel({
     }
   }, []);
 
+// 生成唯一消息 ID
+const generateMessageId = () => `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
   // 发送消息
   const sendMessage = async () => {
     if (!input.trim() || isLoading || !currentSession) return;
@@ -183,8 +181,17 @@ export default function ChatPanel({
       // 重置解析器
       parserRef.current.reset();
 
-      // 添加占位的助手消息
-      assistantMessageId = `msg-${Date.now()}-assistant`;
+      // 添加占位的助手消息到 IndexedDB（获取正确的消息 ID）
+      const sessionWithAssistant = await addMessageToSession(
+        currentSession.id,
+        'assistant',
+        ''
+      );
+
+      // 从 IndexedDB 获取新添加的消息 ID
+      assistantMessageId = sessionWithAssistant?.messages[sessionWithAssistant.messages.length - 1]?.id || generateMessageId();
+
+      // 更新本地 state
       setCurrentSession((prev) => {
         if (!prev) return prev;
         return {
@@ -237,11 +244,13 @@ export default function ChatPanel({
         if (done) break;
 
         const chunk = decoder.decode(value, { stream: true });
+        console.log('[ChatPanel] 收到 chunk:', chunk.substring(0, 100));
         const lines = chunk.split('\n');
 
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             const data = line.slice(6);
+            console.log('[ChatPanel] data:', data.substring(0, 100));
             if (data === '[DONE]') continue;
 
             try {
@@ -254,11 +263,20 @@ export default function ChatPanel({
               if (parsed.content) {
                 fullContent += parsed.content;
 
+                // 调试：查看原始内容
+                console.log('[ChatPanel] 原始内容片段:', parsed.content.substring(0, 200));
+
                 // 流式解析 JSON
                 const newElements = parserRef.current.processChunk(parsed.content);
+                console.log('[ChatPanel] 解析到元素:', newElements.length, newElements.map((e: any) => ({ type: e.type, text: e.text })));
                 if (newElements.length > 0) {
+                  // 增量渲染：逐个发送元素，每次延迟 300ms
                   const completedElements = completeElementsDefaults(newElements);
-                  onElementsGenerated?.(completedElements);
+                  completedElements.forEach((element, index) => {
+                    setTimeout(() => {
+                      onElementsGenerated?.([element]);
+                    }, index * 300);
+                  });
                 }
 
                 // 实时更新助手消息
@@ -287,9 +305,25 @@ export default function ChatPanel({
     } finally {
       setIsLoading(false);
 
-      // 不再重复添加消息，因为已经在流式更新中保持了消息
-      // 如果是错误情况，确保有一个空消息显示
+      // 流结束后刷新缓冲区，处理剩余的 JSON 数据
+      if (parserRef.current) {
+        const remainingElements = parserRef.current.flush();
+        console.log('[ChatPanel] 流结束，刷新剩余元素:', remainingElements.length);
+        if (remainingElements.length > 0) {
+          // 增量渲染
+          const completedElements = completeElementsDefaults(remainingElements);
+          completedElements.forEach((element, index) => {
+            setTimeout(() => {
+              onElementsGenerated?.([element]);
+            }, index * 300);
+          });
+        }
+      }
+
+      // 如果 AI 没有返回内容，添加一个提示消息并持久化
       if (!fullContent && !error) {
+        const finalMessageId = assistantMessageId || generateMessageId();
+        await addMessageToSession(currentSession.id, 'assistant', '生成完成');
         setCurrentSession((prev) => {
           if (!prev) return prev;
           return {
@@ -297,7 +331,7 @@ export default function ChatPanel({
             messages: [
               ...prev.messages,
               {
-                id: assistantMessageId || `msg-${Date.now()}-assistant`,
+                id: finalMessageId,
                 role: 'assistant' as const,
                 content: '生成完成',
                 timestamp: Date.now(),
@@ -307,13 +341,13 @@ export default function ChatPanel({
         });
       }
 
-      // 更新会话标题
-      if (currentSession.messages.length === 1 && fullContent) {
-        const newTitle = generateTitle(userMessage);
-        await addMessageToSession(currentSession.id, 'assistant', fullContent);
-        const allSessions = await getAllSessions();
-        setSessions(allSessions);
+      // 刷新会话数据以确保数据一致性
+      const refreshedSession = await getSession(currentSession.id);
+      if (refreshedSession) {
+        setCurrentSession(refreshedSession);
       }
+      const allSessions = await getAllSessions();
+      setSessions(allSessions);
     }
   };
 

@@ -37,7 +37,14 @@ export function completeElementDefaults(
   const seed = (element.seed as number) || generateSeed();
   const version = (element.version as number) || 1;
   const versionNonce = (element.versionNonce as number) || Math.floor(Math.random() * 100000);
-  const type = (element.type as string) || 'rectangle';
+
+  // 如果元素有 text 字段但类型不是 text，自动转换为 text 类型
+  const hasText = 'text' in element && typeof element.text === 'string' && element.text.length > 0;
+  let type = (element.type as string) || 'rectangle';
+  if (hasText && type !== 'text') {
+    type = 'text';
+    console.log('[ElementDefaults] 检测到 text 字段，自动转换为 text 类型');
+  }
 
   const result: ExcalidrawElementLike = {
     // 基础字段
@@ -97,24 +104,56 @@ export function completeElementsDefaults(
   // 计算每个元素的偏移位置，避免重叠
   let currentX = 50;
   let currentY = 50;
+  const results: ExcalidrawElementLike[] = [];
 
-  return elements.map((element) => {
-    const completed = completeElementDefaults({
-      ...element,
-      // 如果 AI 没有提供位置，则自动排列
-      x: element.x ?? currentX,
-      y: element.y ?? currentY,
-    }) as ExcalidrawElementLike & { width?: number; height?: number };
+  for (const element of elements) {
+    const hasText = 'text' in element && typeof element.text === 'string' && element.text.length > 0;
+    const originalType = (element.type as string) || 'rectangle';
 
-    // 更新下一个元素的位置
-    currentX += (completed.width || 100) + 30;
-    if (currentX > 600) {
-      currentX = 50;
-      currentY += (completed.height || 100) + 30;
+    // 如果有 text 字段且原类型不是 text，需要拆分创建两个元素
+    if (hasText && originalType !== 'text') {
+      // 1. 创建矩形元素（不带 text）
+      const rectElement = completeElementDefaults({
+        ...element,
+        text: undefined, // 移除 text 字段
+        x: element.x ?? currentX,
+        y: element.y ?? currentY,
+      }) as ExcalidrawElementLike;
+      results.push(rectElement);
+
+      // 2. 创建文字元素（位于矩形中心）
+      const textX = ((element.x as number) ?? currentX) + ((element.width as number) ?? 100) / 2;
+      const textY = ((element.y as number) ?? currentY) + ((element.height as number) ?? 60) / 2;
+      const textElement = completeElementDefaults({
+        ...element,
+        type: 'text',
+        x: textX,
+        y: textY,
+        width: element.width || 100,
+        height: element.height || 30,
+      }) as ExcalidrawElementLike;
+      results.push(textElement);
+
+      console.log('[ElementDefaults] 拆分元素: 矩形 + 文字', element.text);
+    } else {
+      // 普通元素直接处理
+      const completed = completeElementDefaults({
+        ...element,
+        x: element.x ?? currentX,
+        y: element.y ?? currentY,
+      }) as ExcalidrawElementLike & { width?: number; height?: number };
+      results.push(completed);
     }
 
-    return completed as ExcalidrawElementLike;
-  });
+    // 更新下一个元素的位置
+    currentX += ((element.width as number) || 100) + 30;
+    if (currentX > 600) {
+      currentX = 50;
+      currentY += ((element.height as number) || 100) + 30;
+    }
+  }
+
+  return results;
 }
 
 /**

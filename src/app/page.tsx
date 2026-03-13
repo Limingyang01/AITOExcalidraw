@@ -19,7 +19,10 @@ export default function Home() {
   const [newElements, setNewElements] = useState<any[]>([]);
 
   const handleElementsGenerated = useCallback((elements: any[]) => {
-    setNewElements((prev) => [...prev, ...elements]);
+    // 每次有新元素时设置，Canvas 处理后会通过 key 变化自动重新渲染
+    setNewElements(elements);
+    // 短暂延迟后清除，以便下次接收新元素
+    setTimeout(() => setNewElements([]), 100);
   }, []);
 
   const handleElementsChange = useCallback(() => {
