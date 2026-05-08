@@ -181,33 +181,6 @@ const generateMessageId = () => `msg-${Date.now()}-${Math.random().toString(36).
       // 重置解析器
       parserRef.current.reset();
 
-      // 添加占位的助手消息到 IndexedDB（获取正确的消息 ID）
-      const sessionWithAssistant = await addMessageToSession(
-        currentSession.id,
-        'assistant',
-        ''
-      );
-
-      // 从 IndexedDB 获取新添加的消息 ID
-      assistantMessageId = sessionWithAssistant?.messages[sessionWithAssistant.messages.length - 1]?.id || generateMessageId();
-
-      // 更新本地 state
-      setCurrentSession((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          messages: [
-            ...prev.messages,
-            {
-              id: assistantMessageId,
-              role: 'assistant',
-              content: '',
-              timestamp: Date.now(),
-            },
-          ],
-        };
-      });
-
       setIsLoading(true);
 
       // 构建消息列表
@@ -668,7 +641,7 @@ const generateMessageId = () => `msg-${Date.now()}-${Math.random().toString(36).
                     color: item.role === 'user' ? '#ffffff' : '#374151',
                   }}
                 >
-                  {item.content || (item.role === 'assistant' && isLoading && !error ? '正在思考...' : '')}
+                  {item.content}
                 </div>
               </div>
             </div>
