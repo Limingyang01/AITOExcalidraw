@@ -162,6 +162,7 @@ const generateMessageId = () => `msg-${Date.now()}-${Math.random().toString(36).
 
     let fullContent = '';
     let assistantMessageId = '';
+    let activeSessionId = currentSession.id;
 
     try {
       // 添加用户消息到会话（实时存储）
@@ -182,6 +183,17 @@ const generateMessageId = () => `msg-${Date.now()}-${Math.random().toString(36).
       parserRef.current.reset();
 
       setIsLoading(true);
+
+      // 先添加一个空的助手消息占位符，避免覆盖用户消息
+      assistantMessageId = generateMessageId();
+      const sessionWithPlaceholder = await addMessageToSession(
+        currentSession.id,
+        'assistant',
+        ''
+      );
+      if (sessionWithPlaceholder) {
+        setCurrentSession(sessionWithPlaceholder);
+      }
 
       // 构建消息列表
       const messages: Message[] = [
@@ -265,7 +277,7 @@ const generateMessageId = () => `msg-${Date.now()}-${Math.random().toString(36).
                 });
 
                 // 实时保存到 IndexedDB
-                await updateLastMessage(currentSession.id, fullContent);
+                await updateLastMessage(activeSessionId, fullContent);
               }
             } catch {
               // 忽略解析错误，继续处理下一行
@@ -296,7 +308,7 @@ const generateMessageId = () => `msg-${Date.now()}-${Math.random().toString(36).
       // 如果 AI 没有返回内容，添加一个提示消息并持久化
       if (!fullContent && !error) {
         const finalMessageId = assistantMessageId || generateMessageId();
-        await addMessageToSession(currentSession.id, 'assistant', '生成完成');
+        await addMessageToSession(activeSessionId, 'assistant', '生成完成');
         setCurrentSession((prev) => {
           if (!prev) return prev;
           return {

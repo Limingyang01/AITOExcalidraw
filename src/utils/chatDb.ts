@@ -178,6 +178,12 @@ export async function updateLastMessage(
     if (!session || session.messages.length === 0) return;
 
     const lastMessage = session.messages[session.messages.length - 1];
+    // 只更新助手消息，避免覆盖用户消息
+    if (lastMessage.role !== 'assistant') {
+      console.warn('[updateLastMessage] 最后一条消息不是助手消息，跳过更新');
+      return;
+    }
+
     lastMessage.content = content;
     session.updatedAt = Date.now();
 
