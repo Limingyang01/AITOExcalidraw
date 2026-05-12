@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { ArrowLeft, Save, Pencil } from 'lucide-react';
+import { ArrowLeft, Save, Pencil, Loader2 } from 'lucide-react';
 import { Button, Input, message } from 'antd';
 import { getProject, updateProjectCanvas, updateProjectName, Project } from '@/utils/projectDb';
 
@@ -12,7 +12,13 @@ const Canvas = dynamic(() => import('@/components/Canvas'), {
   ssr: false,
   loading: () => (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%', backgroundColor: '#fafaf9' }}>
-      <span style={{ color: '#666' }}>加载画布...</span>
+      <Loader2 size={32} style={{ color: '#1f1f1f', animation: 'spin 1s linear infinite' }} />
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   ),
 });
@@ -21,7 +27,7 @@ const ChatPanel = dynamic(() => import('@/components/ChatPanel'), {
   ssr: false,
   loading: () => (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%', backgroundColor: '#fafaf9' }}>
-      <span style={{ color: '#666' }}>加载对话...</span>
+      <Loader2 size={32} style={{ color: '#1f1f1f', animation: 'spin 1s linear infinite' }} />
     </div>
   ),
 });
@@ -29,6 +35,7 @@ const ChatPanel = dynamic(() => import('@/components/ChatPanel'), {
 export default function ProjectDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const antMessage = message;
   const projectId = params.id as string;
 
   const [project, setProject] = useState<Project | null>(null);
@@ -82,10 +89,10 @@ export default function ProjectDetailPage() {
       if (updatedProject) {
         setProject(updatedProject);
       }
-      message.success('保存成功');
+      antMessage.success('保存成功');
     } catch (error) {
       console.error('Failed to save project:', error);
-      message.error('保存失败');
+      antMessage.error('保存失败');
     } finally {
       setIsSaving(false);
     }
@@ -109,10 +116,10 @@ export default function ProjectDetailPage() {
         setProject(updated);
       }
       setIsEditingName(false);
-      message.success('名称已更新');
+      antMessage.success('名称已更新');
     } catch (error) {
       console.error('Failed to update project name:', error);
-      message.error('更新失败');
+      antMessage.error('更新失败');
     }
   };
 
@@ -123,8 +130,15 @@ export default function ProjectDetailPage() {
 
   if (isLoading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: '#fafaf9' }}>
-        <span style={{ color: '#666' }}>加载中...</span>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: '#fafaf9', gap: '16px' }}>
+        <Loader2 size={32} style={{ color: '#1f1f1f', animation: 'spin 1s linear infinite' }} />
+        <span style={{ color: '#666', fontSize: '14px' }}>加载中...</span>
+        <style>{`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     );
   }

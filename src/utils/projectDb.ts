@@ -8,6 +8,7 @@ const STORE_NAME = 'projects';
 export interface Project {
   id: string;
   name: string;
+  description?: string;
   elements: Record<string, unknown>[];
   appState?: Record<string, unknown>;
   createdAt: number;
@@ -112,10 +113,11 @@ export async function saveProject(project: Project): Promise<void> {
 /**
  * 创建新项目
  */
-export async function createProject(name: string): Promise<Project> {
+export async function createProject(name: string, description?: string): Promise<Project> {
   const project: Project = {
     id: `project-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
     name,
+    description,
     elements: [],
     appState: {
       viewBackgroundColor: '#ffffff',
@@ -148,6 +150,24 @@ export async function updateProjectName(id: string, name: string): Promise<Proje
     return project;
   } catch (error) {
     console.error('Failed to update project name:', error);
+    return null;
+  }
+}
+
+/**
+ * 更新项目描述
+ */
+export async function updateProjectDescription(id: string, description: string): Promise<Project | null> {
+  try {
+    const project = await getProject(id);
+    if (!project) return null;
+
+    project.description = description;
+    project.updatedAt = Date.now();
+    await saveProject(project);
+    return project;
+  } catch (error) {
+    console.error('Failed to update project description:', error);
     return null;
   }
 }

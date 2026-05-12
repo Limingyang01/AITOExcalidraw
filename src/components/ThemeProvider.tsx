@@ -1,6 +1,6 @@
 'use client';
 
-import { ConfigProvider, ThemeConfig } from 'antd';
+import { ConfigProvider, App, ThemeConfig } from 'antd';
 
 const theme: ThemeConfig = {
   token: {
@@ -25,5 +25,9 @@ const theme: ThemeConfig = {
 };
 
 export default function ThemeProvider({ children }: { children: React.ReactNode }) {
-  return <ConfigProvider theme={theme}>{children}</ConfigProvider>;
+  return (
+    <ConfigProvider theme={theme}>
+      <App>{children}</App>
+    </ConfigProvider>
+  );
 }
