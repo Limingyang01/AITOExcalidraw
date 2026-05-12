@@ -11,7 +11,7 @@ import {
   Project,
 } from '@/utils/projectDb';
 
-export default function Home() {
+export default function WorkspacePage() {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);

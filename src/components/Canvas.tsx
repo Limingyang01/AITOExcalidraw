@@ -14,6 +14,9 @@ interface CanvasProps {
   newElements?: Record<string, unknown>[];
   onElementsChange?: (elements: Record<string, unknown>[]) => void;
   resetTrigger?: number;
+  initialElements?: Record<string, unknown>[];
+  onSave?: (elements: Record<string, unknown>[]) => void;
+  saveTrigger?: number;
 }
 
 // 炫酷的加载动画组件
@@ -83,20 +86,41 @@ function LoadingAnimation() {
   );
 }
 
-export default function Canvas({ newElements, onElementsChange, resetTrigger }: CanvasProps) {
+export default function Canvas({
+  newElements,
+  onElementsChange,
+  resetTrigger,
+  initialElements,
+  onSave,
+  saveTrigger,
+}: CanvasProps) {
   const [elements, setElements] = useState<Record<string, unknown>[]>([]);
   const [isReady, setIsReady] = useState(false);
   const [renderKey, setRenderKey] = useState(0);
   const processedIdsRef = useRef<Set<string>>(new Set());
   const onElementsChangeRef = useRef(onElementsChange);
   onElementsChangeRef.current = onElementsChange;
+  const initialLoadedRef = useRef(false);
 
   // 加载保存的画布数据
   useEffect(() => {
+    // 如果有初始元素（从项目加载），使用初始元素
+    if (initialElements && initialElements.length > 0) {
+      setElements(initialElements);
+      initialElements.forEach((el: Record<string, unknown>) => {
+        if (el.id) {
+          processedIdsRef.current.add(String(el.id));
+        }
+      });
+      setIsReady(true);
+      initialLoadedRef.current = true;
+      return;
+    }
+
+    // 否则从 localStorage 加载
     const savedData = getExcalidrawData();
     if (savedData && savedData.elements) {
       setElements(savedData.elements);
-      // 记录已处理的元素 ID
       savedData.elements.forEach((el: Record<string, unknown>) => {
         if (el.id) {
           processedIdsRef.current.add(String(el.id));
@@ -104,7 +128,7 @@ export default function Canvas({ newElements, onElementsChange, resetTrigger }: 
       });
     }
     setIsReady(true);
-  }, []);
+  }, [initialElements]);
 
   // 处理新添加的元素（来自 AI）- 实时推送到画布
   useEffect(() => {
@@ -130,8 +154,10 @@ export default function Canvas({ newElements, onElementsChange, resetTrigger }: 
     // 更新本地状态
     setElements((prev) => {
       const updated = [...prev, ...completedElements];
-      // 保存到 localStorage
-      saveElements(updated);
+      // 保存到 localStorage（仅在没有 initialElements 时）
+      if (!initialLoadedRef.current) {
+        saveElements(updated);
+      }
       return updated;
     });
 
@@ -155,6 +181,13 @@ export default function Canvas({ newElements, onElementsChange, resetTrigger }: 
       handleClearCanvas();
     }
   }, [resetTrigger, handleClearCanvas]);
+
+  // 监听 saveTrigger 变化，触发保存
+  useEffect(() => {
+    if (saveTrigger && saveTrigger > 0 && onSave) {
+      onSave(elements);
+    }
+  }, [saveTrigger, onSave, elements]);
 
   if (!isReady) {
     return (

@@ -15,6 +15,7 @@
 | 请求日志记录 | ✅ 已完成 |
 | SSE 流式传输 | ✅ 已完成 |
 | 画布元素管理 | ✅ 已完成 |
+| 工作空间（多项目管理） | ✅ 已完成 |
 
 ## 技术实现
 
@@ -22,7 +23,7 @@
 
 - **前端框架**: Next.js 15.5.12 (App Router) + React 19
 - **类型系统**: TypeScript
-- **样式框架**: Tailwind CSS + shadcn/ui
+- **样式框架**: Tailwind CSS + Ant Design
 - **画板库**: @excalidraw/excalidraw
 - **AI 服务**: OpenAI SDK (兼容智谱、阿里百炼)
 - **日志服务**: Winston
@@ -62,6 +63,7 @@
 | 数据 | 存储方式 | 键名 |
 |------|----------|------|
 | 对话历史 | IndexedDB | `chatHistory` |
+| 项目管理 | IndexedDB | `projects` |
 | 画布数据 | localStorage | `excalidrawData` |
 
 ### 环境变量
@@ -94,3 +96,6 @@ System Prompt 核心要点：
 - v1.0.5: 解决流式绘制 bug
 - v1.0.6: 修复 logo size warning bug
 - v1.0.7: 修复 AI 对话占位数据异常问题
+- v1.1.0: 新增工作空间功能，支持多项目管理（创建/编辑/删除项目）
+- v1.1.1: 首页直接作为工作空间页面，UI 样式与详情页保持一致
+- v1.2.0: UI 组件库从 shadcn/ui 切换为 Ant Design

@@ -21,31 +21,33 @@ AI + Excalidraw 手绘风格绘图工具，通过 AI 对话生成 Excalidraw 图
 ```
 src/
 ├── app/
-│   ├── page.tsx           # 主页面
-│   ├── layout.tsx         # 布局
-│   ├── globals.css        # 全局样式
-│   └── api/chat/route.ts  # AI 对话 API
+│   ├── page.tsx              # 首页（工作空间）
+│   ├── layout.tsx            # 布局
+│   ├── globals.css           # 全局样式
+│   ├── api/chat/route.ts     # AI 对话 API
+│   └── workspace/
+│       └── [id]/page.tsx     # 项目详情页
 ├── components/
-│   ├── Canvas.tsx         # Excalidraw 画布
-│   ├── ChatPanel.tsx      # AI 对话面板
-│   └── Header.tsx         # 顶部导航
+│   ├── Canvas.tsx            # Excalidraw 画布
+│   ├── ChatPanel.tsx         # AI 对话面板
+│   └── Header.tsx            # 顶部导航
 ├── services/
-│   ├── aiService.ts       # AI 服务入口
-│   ├── logger.ts          # 日志服务
-│   └── aiProviders/       # AI 提供商兼容层
-│       ├── index.ts       # 统一接口
-│       ├── openai.ts     # OpenAI 实现
-│       ├── zhipu.ts      # 智谱实现
-│       └── aliyun.ts     # 阿里百炼实现
+│   ├── aiService.ts          # AI 服务入口
+│   ├── logger.ts             # 日志服务
+│   └── aiProviders/          # AI 提供商兼容层
+│       ├── index.ts          # 统一接口
+│       ├── openai.ts         # OpenAI 实现
+│       ├── zhipu.ts          # 智谱实现
+│       └── aliyun.ts         # 阿里百炼实现
 ├── utils/
-│   ├── jsonParser.ts      # 流式 JSON 解析器
-│   ├── elementDefaults.ts # 元素默认字段补全
-│   ├── storage.ts         # localStorage 存储（画布数据）
-│   └── chatDb.ts          # IndexedDB 存储（对话历史）
+│   ├── jsonParser.ts         # 流式 JSON 解析器
+│   ├── elementDefaults.ts    # 元素默认字段补全
+│   ├── storage.ts            # localStorage 存储（画布数据）
+│   ├── chatDb.ts             # IndexedDB 存储（对话历史）
+│   └── projectDb.ts          # IndexedDB 存储（项目管理）
 ├── lib/
-│   └── utils.ts           # shadcn/ui 工具函数
-├── components/ui/         # shadcn/ui 组件
-└── types/index.ts         # TypeScript 类型定义
+│   └── utils.ts              # 工具函数
+└── types/index.ts            # TypeScript 类型定义
 ```
 
 ## 核心功能
@@ -58,7 +60,9 @@ src/
 | 多 AI 提供商支持 | ✅ |
 | localStorage 画布持久化 | ✅ |
 | IndexedDB 对话历史持久化 | ✅ |
+| IndexedDB 项目管理 | ✅ |
 | 请求日志记录 | ✅ |
+| 工作空间（多项目管理） | ✅ |
 
 ## 环境变量
 
@@ -98,14 +102,13 @@ src/
 - 服务层分离：AI 服务、日志、存储
 - 使用 `any` 类型处理 Excalidraw 复杂类型（因官方类型定义变更频繁）
 
-## Shadcn UI 使用规则
+## Ant Design 使用规则
 
-**重要**：优先使用 Shadcn UI 组件，避免重复造轮子。
+**重要**：优先使用 Ant Design 组件库，保持 UI 一致性。
 
-- 使用 Shadcn UI 组件库：`npx shadcn@latest add [component]`
-- 组件位置：`src/components/ui/`
+- 使用 Ant Design 组件：`Button`, `Modal`, `Input`, `Card`, `message` 等
+- 图标使用 `lucide-react`
 - 工具函数：`src/lib/utils.ts`
-- 样式变量在 `globals.css` 中定义，使用 Tailwind 的 `hsl()` 语法
 
 ## API 路由
 
@@ -129,6 +132,8 @@ src/
 
 - **IndexedDB** (通过 `chatDb.ts`):
   - `chatHistory` - 对话历史
+- **IndexedDB** (通过 `projectDb.ts`):
+  - `projects` - 项目管理（名称、画布元素）
 - **localStorage** (通过 `storage.ts`):
   - `excalidrawData` - 画布数据
 
