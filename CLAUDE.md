@@ -40,7 +40,11 @@ src/
 ├── utils/
 │   ├── jsonParser.ts      # 流式 JSON 解析器
 │   ├── elementDefaults.ts # 元素默认字段补全
-│   └── storage.ts         # localStorage 存储
+│   ├── storage.ts         # localStorage 存储（画布数据）
+│   └── chatDb.ts          # IndexedDB 存储（对话历史）
+├── lib/
+│   └── utils.ts           # shadcn/ui 工具函数
+├── components/ui/         # shadcn/ui 组件
 └── types/index.ts         # TypeScript 类型定义
 ```
 
@@ -52,7 +56,8 @@ src/
 | AI 对话生成图形 | ✅ |
 | 流式输出 + 实时渲染 | ✅ |
 | 多 AI 提供商支持 | ✅ |
-| localStorage 持久化 | ✅ |
+| localStorage 画布持久化 | ✅ |
+| IndexedDB 对话历史持久化 | ✅ |
 | 请求日志记录 | ✅ |
 
 ## 环境变量
@@ -122,8 +127,9 @@ src/
 
 ## 数据持久化
 
-- **localStorage**:
+- **IndexedDB** (通过 `chatDb.ts`):
   - `chatHistory` - 对话历史
+- **localStorage** (通过 `storage.ts`):
   - `excalidrawData` - 画布数据
 
 

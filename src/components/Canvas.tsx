@@ -13,6 +13,7 @@ import { completeElementsDefaults } from '@/utils/elementDefaults';
 interface CanvasProps {
   newElements?: Record<string, unknown>[];
   onElementsChange?: (elements: Record<string, unknown>[]) => void;
+  resetTrigger?: number;
 }
 
 // 炫酷的加载动画组件
@@ -82,7 +83,7 @@ function LoadingAnimation() {
   );
 }
 
-export default function Canvas({ newElements, onElementsChange }: CanvasProps) {
+export default function Canvas({ newElements, onElementsChange, resetTrigger }: CanvasProps) {
   const [elements, setElements] = useState<Record<string, unknown>[]>([]);
   const [isReady, setIsReady] = useState(false);
   const [renderKey, setRenderKey] = useState(0);
@@ -147,6 +148,13 @@ export default function Canvas({ newElements, onElementsChange }: CanvasProps) {
     clearExcalidrawData();
     setRenderKey((k) => k + 1);
   }, []);
+
+  // 监听 resetTrigger 变化，重置画布
+  useEffect(() => {
+    if (resetTrigger && resetTrigger > 0) {
+      handleClearCanvas();
+    }
+  }, [resetTrigger, handleClearCanvas]);
 
   if (!isReady) {
     return (

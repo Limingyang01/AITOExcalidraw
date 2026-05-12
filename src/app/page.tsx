@@ -17,6 +17,7 @@ const Canvas = dynamic(() => import('@/components/Canvas'), {
 
 export default function Home() {
   const [newElements, setNewElements] = useState<any[]>([]);
+  const [resetTrigger, setResetTrigger] = useState(0);
 
   const handleElementsGenerated = useCallback((elements: any[]) => {
     // 每次有新元素时设置，Canvas 处理后会通过 key 变化自动重新渲染
@@ -29,6 +30,10 @@ export default function Home() {
     // 画布组件会处理
   }, []);
 
+  const handleMessageSent = useCallback(() => {
+    setResetTrigger((prev) => prev + 1);
+  }, []);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       <Header />
@@ -38,11 +43,12 @@ export default function Home() {
           <Canvas
             newElements={newElements}
             onElementsChange={handleElementsChange}
+            resetTrigger={resetTrigger}
           />
         </div>
 
         <div style={{ width: '380px', height: '100%', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e7e5e4', backgroundColor: '#ffffff' }}>
-          <ChatPanel onElementsGenerated={handleElementsGenerated} />
+          <ChatPanel onElementsGenerated={handleElementsGenerated} onMessageSent={handleMessageSent} />
         </div>
       </div>
     </div>
