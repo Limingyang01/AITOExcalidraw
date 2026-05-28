@@ -18,6 +18,8 @@ coverage
 /cypress/videos/
 /cypress/screenshots/
 
+/.claude
+
 /Front/node_modules
 /Server/node_modules
 

@@ -14,6 +14,8 @@ import {
   clearAllSessions,
   setCurrentSessionId,
   getCurrentSessionId,
+  getProjectSessionId,
+  setProjectSessionId,
   ChatSession,
 } from "@/utils/chatDb";
 import {
@@ -28,11 +30,13 @@ import {
 } from "lucide-react";
 
 interface ChatPanelProps {
+  projectId?: string;
   onElementsGenerated?: (elements: Record<string, unknown>[]) => void;
   onMessageSent?: () => void;
 }
 
 export default function ChatPanel({
+  projectId,
   onElementsGenerated,
   onMessageSent,
 }: ChatPanelProps) {
@@ -51,7 +55,7 @@ export default function ChatPanel({
   // 加载所有会话
   useEffect(() => {
     loadSessions();
-  }, []);
+  }, [projectId]);
 
   // 加载会话列表
   const loadSessions = async () => {
@@ -59,7 +63,19 @@ export default function ChatPanel({
       const allSessions = await getAllSessions();
       setSessions(allSessions);
 
-      // 恢复当前会话
+      // 如果有 projectId，尝试加载项目对应的会话
+      if (projectId) {
+        const projectSessionId = getProjectSessionId(projectId);
+        if (projectSessionId) {
+          const session = await getSession(projectSessionId);
+          if (session) {
+            setCurrentSession(session);
+            return;
+          }
+        }
+      }
+
+      // 恢复当前会话（跨项目共享）
       const currentId = getCurrentSessionId();
       if (currentId) {
         const session = await getSession(currentId);
@@ -74,12 +90,18 @@ export default function ChatPanel({
         const newSession = await createSession("新对话");
         setCurrentSession(newSession);
         setCurrentSessionId(newSession.id);
+        if (projectId) {
+          setProjectSessionId(projectId, newSession.id);
+        }
       } else if (allSessions.length > 0) {
         // 使用第一个会话
         const session = await getSession(allSessions[0].id);
         if (session) {
           setCurrentSession(session);
           setCurrentSessionId(session.id);
+          if (projectId) {
+            setProjectSessionId(projectId, session.id);
+          }
         }
       }
     } catch (err) {
@@ -98,13 +120,16 @@ export default function ChatPanel({
       const newSession = await createSession("新对话");
       setCurrentSession(newSession);
       setCurrentSessionId(newSession.id);
+      if (projectId) {
+        setProjectSessionId(projectId, newSession.id);
+      }
       setSessions((prev) => [newSession, ...prev]);
       setError(null);
       setSidebarOpen(false);
     } catch (err) {
       console.error("Failed to create session:", err);
     }
-  }, []);
+  }, [projectId]);
 
   // 切换会话
   const handleSelectSession = useCallback(async (session: ChatSession) => {
@@ -113,12 +138,15 @@ export default function ChatPanel({
       if (fullSession) {
         setCurrentSession(fullSession);
         setCurrentSessionId(fullSession.id);
+        if (projectId) {
+          setProjectSessionId(projectId, fullSession.id);
+        }
         setSidebarOpen(false);
       }
     } catch (err) {
       console.error("Failed to select session:", err);
     }
-  }, []);
+  }, [projectId]);
 
   // 删除会话
   const handleDeleteSession = useCallback(
@@ -128,9 +156,15 @@ export default function ChatPanel({
         await deleteSession(sessionId);
 
         if (currentSession?.id === sessionId) {
+          if (projectId) {
+            setProjectSessionId(projectId, null);
+          }
           const newSession = await createSession("新对话");
           setCurrentSession(newSession);
           setCurrentSessionId(newSession.id);
+          if (projectId) {
+            setProjectSessionId(projectId, newSession.id);
+          }
           setSessions([newSession]);
         } else {
           const allSessions = await getAllSessions();
@@ -140,21 +174,27 @@ export default function ChatPanel({
         console.error("Failed to delete session:", err);
       }
     },
-    [currentSession?.id],
+    [currentSession?.id, projectId],
   );
 
   // 清空所有历史
   const handleClearAll = useCallback(async () => {
     try {
       await clearAllSessions();
+      if (projectId) {
+        setProjectSessionId(projectId, null);
+      }
       const newSession = await createSession("新对话");
       setCurrentSession(newSession);
       setCurrentSessionId(newSession.id);
+      if (projectId) {
+        setProjectSessionId(projectId, newSession.id);
+      }
       setSessions([newSession]);
     } catch (err) {
       console.error("Failed to clear all sessions:", err);
     }
-  }, []);
+  }, [projectId]);
 
   // 生成唯一消息 ID
   const generateMessageId = () =>

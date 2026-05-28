@@ -250,3 +250,23 @@ export function setCurrentSessionId(id: string | null): void {
     localStorage.removeItem('current-session-id');
   }
 }
+
+/**
+ * 获取项目对应的会话 ID
+ */
+export function getProjectSessionId(projectId: string): string | null {
+  if (!isBrowser()) return null;
+  return localStorage.getItem(`project-${projectId}-session-id`);
+}
+
+/**
+ * 设置项目对应的会话 ID
+ */
+export function setProjectSessionId(projectId: string, sessionId: string | null): void {
+  if (!isBrowser()) return;
+  if (sessionId) {
+    localStorage.setItem(`project-${projectId}-session-id`, sessionId);
+  } else {
+    localStorage.removeItem(`project-${projectId}-session-id`);
+  }
+}

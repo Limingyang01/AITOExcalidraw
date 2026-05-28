@@ -227,6 +227,7 @@ export default function ProjectDetailPage() {
           }}
         >
           <ChatPanel
+            projectId={projectId}
             onElementsGenerated={handleElementsGenerated}
             onMessageSent={handleMessageSent}
           />

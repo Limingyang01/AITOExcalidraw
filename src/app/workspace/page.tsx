@@ -9,6 +9,7 @@ import {
   getAllProjects,
   createProject,
   deleteProject,
+  updateProjectName,
   updateProjectDescription,
   Project,
 } from '@/utils/projectDb';
@@ -22,8 +23,9 @@ export default function WorkspacePage() {
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  const [editDescModalOpen, setEditDescModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [editNameValue, setEditNameValue] = useState('');
   const [editDescValue, setEditDescValue] = useState('');
 
   useEffect(() => {
@@ -80,34 +82,36 @@ export default function WorkspacePage() {
     });
   };
 
-  const handleEditDescription = (project: Project) => {
+  const handleEditProject = (project: Project) => {
     setEditingProject(project);
+    setEditNameValue(project.name);
     setEditDescValue(project.description || '');
-    setEditDescModalOpen(true);
+    setEditModalOpen(true);
   };
 
-  const handleSaveDescription = async () => {
-    if (!editingProject) return;
+  const handleSaveProject = async () => {
+    if (!editingProject || !editNameValue.trim()) return;
     try {
-      const updated = await updateProjectDescription(editingProject.id, editDescValue.trim());
+      let updated = await updateProjectName(editingProject.id, editNameValue.trim());
       if (updated) {
-        setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+        updated = await updateProjectDescription(editingProject.id, editDescValue.trim()) || updated;
+        setProjects((prev) => prev.map((p) => (p.id === updated!.id ? updated! : p)));
       }
-      setEditDescModalOpen(false);
+      setEditModalOpen(false);
       setEditingProject(null);
-      antMessage.success('描述已更新');
+      antMessage.success('项目已更新');
     } catch (error) {
-      console.error('Failed to update description:', error);
+      console.error('Failed to update project:', error);
       antMessage.error('更新失败');
     }
   };
 
   const getMenuItems = (project: Project): MenuProps['items'] => [
     {
-      key: 'edit-desc',
+      key: 'edit',
       icon: <EditOutlined />,
-      label: '编辑描述',
-      onClick: () => handleEditDescription(project),
+      label: '编辑',
+      onClick: () => handleEditProject(project),
     },
     {
       key: 'delete',
@@ -271,25 +275,32 @@ export default function WorkspacePage() {
         </div>
       </Modal>
 
-      {/* 编辑描述对话框 */}
+      {/* 编辑项目对话框 */}
       <Modal
-        title="编辑描述"
-        open={editDescModalOpen}
-        onOk={handleSaveDescription}
+        title="编辑项目"
+        open={editModalOpen}
+        onOk={handleSaveProject}
         onCancel={() => {
-          setEditDescModalOpen(false);
+          setEditModalOpen(false);
           setEditingProject(null);
         }}
         okText="保存"
         cancelText="取消"
       >
-        <Input.TextArea
-          placeholder="输入项目描述"
-          value={editDescValue}
-          onChange={(e) => setEditDescValue(e.target.value)}
-          rows={4}
-          autoFocus
-        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <Input
+            placeholder="输入项目名称"
+            value={editNameValue}
+            onChange={(e) => setEditNameValue(e.target.value)}
+            autoFocus
+          />
+          <Input.TextArea
+            placeholder="输入项目描述"
+            value={editDescValue}
+            onChange={(e) => setEditDescValue(e.target.value)}
+            rows={4}
+          />
+        </div>
       </Modal>
     </div>
   );
