@@ -27,6 +27,7 @@ coverage
 
 
 # Next.js
+/.env
 .next/
 out/
 build/
