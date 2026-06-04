@@ -4,18 +4,18 @@
 
 ## 功能清单
 
-| 功能 | 状态 |
-|------|------|
-| Excalidraw 画板集成 | ✅ 已完成 |
-| AI 对话生成图形 | ✅ 已完成 |
-| 流式输出 + 实时渲染 | ✅ 已完成 |
-| 多 AI 提供商支持 | ✅ 已完成 |
-| localStorage 画布持久化 | ✅ 已完成 |
+| 功能                     | 状态      |
+| ------------------------ | --------- |
+| Excalidraw 画板集成      | ✅ 已完成 |
+| AI 对话生成图形          | ✅ 已完成 |
+| 流式输出 + 实时渲染      | ✅ 已完成 |
+| 多 AI 提供商支持         | ✅ 已完成 |
+| localStorage 画布持久化  | ✅ 已完成 |
 | IndexedDB 对话历史持久化 | ✅ 已完成 |
-| 请求日志记录 | ✅ 已完成 |
-| SSE 流式传输 | ✅ 已完成 |
-| 画布元素管理 | ✅ 已完成 |
-| 工作空间（多项目管理） | ✅ 已完成 |
+| 请求日志记录             | ✅ 已完成 |
+| SSE 流式传输             | ✅ 已完成 |
+| 画布元素管理             | ✅ 已完成 |
+| 工作空间（多项目管理）   | ✅ 已完成 |
 
 ## 技术实现
 
@@ -30,29 +30,29 @@
 
 ### 核心模块
 
-| 模块 | 路径 | 说明 |
-|------|------|------|
-| AI 服务入口 | `src/services/aiService.ts` | 统一消息构建，调用提供商 |
-| AI 提供商兼容层 | `src/services/aiProviders/` | OpenAI / 智谱 / 阿里百炼 |
-| 流式 JSON 解析器 | `src/utils/jsonParser.ts` | 逐字符解析，处理嵌套和字符串内花括号 |
-| 元素默认字段补全 | `src/utils/elementDefaults.ts` | 补全 Excalidraw 必需字段 |
-| 画布组件 | `src/components/Canvas.tsx` | Excalidraw 集成 |
-| 对话面板 | `src/components/ChatPanel.tsx` | AI 对话 + 消息渲染 |
-| API 路由 | `src/app/api/chat/route.ts` | 服务端 AI 调用 + 日志记录 |
+| 模块             | 路径                           | 说明                                 |
+| ---------------- | ------------------------------ | ------------------------------------ |
+| AI 服务入口      | `src/services/aiService.ts`    | 统一消息构建，调用提供商             |
+| AI 提供商兼容层  | `src/services/aiProviders/`    | OpenAI / 智谱 / 阿里百炼             |
+| 流式 JSON 解析器 | `src/utils/jsonParser.ts`      | 逐字符解析，处理嵌套和字符串内花括号 |
+| 元素默认字段补全 | `src/utils/elementDefaults.ts` | 补全 Excalidraw 必需字段             |
+| 画布组件         | `src/components/Canvas.tsx`    | Excalidraw 集成                      |
+| 对话面板         | `src/components/ChatPanel.tsx` | AI 对话 + 消息渲染                   |
+| API 路由         | `src/app/api/chat/route.ts`    | 服务端 AI 调用 + 日志记录            |
 
 ### API 设计
 
 **POST /api/chat**
 
 请求头:
+
 - `x-ai-provider`: `openai` | `zhipu` | `aliyun`
 
 请求体:
+
 ```json
 {
-  "messages": [
-    { "role": "user", "content": "画一个圆形" }
-  ]
+  "messages": [{ "role": "user", "content": "画一个圆形" }]
 }
 ```
 
@@ -60,25 +60,26 @@
 
 ### 数据持久化
 
-| 数据 | 存储方式 | 键名 |
-|------|----------|------|
-| 对话历史 | IndexedDB | `chatHistory` |
-| 项目管理 | IndexedDB | `projects` |
+| 数据     | 存储方式     | 键名             |
+| -------- | ------------ | ---------------- |
+| 对话历史 | IndexedDB    | `chatHistory`    |
+| 项目管理 | IndexedDB    | `projects`       |
 | 画布数据 | localStorage | `excalidrawData` |
 
 ### 环境变量
 
-| 变量 | 说明 | 必填 |
-|------|------|------|
-| `DEFAULT_PROVIDER` | 默认 AI 提供商 | 是 |
-| `OPENAI_API_KEY` | OpenAI API Key | 否 |
-| `ZHIPU_API_KEY` | 智谱 API Key | 否 |
-| `ALIYUN_API_KEY` | 阿里百炼 API Key | 否 |
-| `ALIYUN_BASE_URL` | 阿里百炼 Base URL | 否 |
+| 变量               | 说明              | 必填 |
+| ------------------ | ----------------- | ---- |
+| `DEFAULT_PROVIDER` | 默认 AI 提供商    | 是   |
+| `OPENAI_API_KEY`   | OpenAI API Key    | 否   |
+| `ZHIPU_API_KEY`    | 智谱 API Key      | 否   |
+| `ALIYUN_API_KEY`   | 阿里百炼 API Key  | 否   |
+| `ALIYUN_BASE_URL`  | 阿里百炼 Base URL | 否   |
 
 ## AI 绘图提示词设计
 
 System Prompt 核心要点：
+
 - 输出格式：纯 JSON 数组，禁止代码块标记
 - 形状元素使用 `type: "rectangle" | "ellipse" | "diamond" | "arrow"`
 - 文字元素使用 `type: "text"`，支持中英文宽度计算
@@ -99,3 +100,4 @@ System Prompt 核心要点：
 - v1.1.0: 新增工作空间功能，支持多项目管理（创建/编辑/删除项目）
 - v1.1.1: 首页直接作为工作空间页面，UI 样式与详情页保持一致
 - v1.2.0: UI 组件库从 shadcn/ui 切换为 Ant Design
+- v1.2.1: 修复「沉浸式翻译」浏览器扩展注入 `data-immersive-translate-page-theme` 属性导致的 React hydration warning；在 `src/app/layout.tsx` 的 `<html>` 标签上添加 `suppressHydrationWarning`（仅抑制该标签自身属性差异，不影响子树水合校验）
