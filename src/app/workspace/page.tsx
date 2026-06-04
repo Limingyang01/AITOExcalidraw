@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, FolderOpen, Clock, Loader2 } from 'lucide-react';
 import { MoreOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Button, Modal, Input, Card, message, Dropdown, Tooltip, type MenuProps } from 'antd';
+import { App, Button, Modal, Input, Card, Dropdown, Tooltip, type MenuProps } from 'antd';
 import {
   getAllProjects,
   createProject,
@@ -16,7 +16,7 @@ import {
 
 export default function WorkspacePage() {
   const router = useRouter();
-  const antMessage = message;
+  const { message: antMessage, modal } = App.useApp();
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -63,7 +63,7 @@ export default function WorkspacePage() {
   };
 
   const handleDeleteProject = (projectId: string, projectName: string) => {
-    Modal.confirm({
+    modal.confirm({
       title: '确认删除',
       content: `确定要删除项目「${projectName}」吗？此操作不可恢复。`,
       okText: '删除',

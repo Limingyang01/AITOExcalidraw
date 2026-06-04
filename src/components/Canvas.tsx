@@ -104,8 +104,8 @@ export default function Canvas({
 
   // 加载保存的画布数据
   useEffect(() => {
-    // 如果有初始元素（从项目加载），使用初始元素
-    if (initialElements && initialElements.length > 0) {
+    // 项目模式：父组件传入 initialElements（即使为空也代表项目自有画布），直接使用且不读 localStorage
+    if (initialElements !== undefined) {
       setElements(initialElements);
       initialElements.forEach((el: Record<string, unknown>) => {
         if (el.id) {
@@ -117,7 +117,7 @@ export default function Canvas({
       return;
     }
 
-    // 否则从 localStorage 加载
+    // 全局模式：从 localStorage 加载
     const savedData = getExcalidrawData();
     if (savedData && savedData.elements) {
       setElements(savedData.elements);

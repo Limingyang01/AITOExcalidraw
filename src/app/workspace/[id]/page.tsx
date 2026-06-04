@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { ArrowLeft, Save, Pencil, Loader2 } from 'lucide-react';
-import { Button, Input, message } from 'antd';
+import { ArrowLeft, Save, Pencil, Loader2, PanelRightOpen } from 'lucide-react';
+import { App, Button, Input, Modal } from 'antd';
 import { getProject, updateProjectCanvas, updateProjectName, Project } from '@/utils/projectDb';
 
 // 动态导入 Excalidraw 组件，避免 SSR 问题
@@ -35,7 +35,7 @@ const ChatPanel = dynamic(() => import('@/components/ChatPanel'), {
 export default function ProjectDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const antMessage = message;
+  const { message: antMessage } = App.useApp();
   const projectId = params.id as string;
 
   const [project, setProject] = useState<Project | null>(null);
@@ -46,6 +46,10 @@ export default function ProjectDetailPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [leaveModalOpen, setLeaveModalOpen] = useState(false);
+  const [chatPanelVisible, setChatPanelVisible] = useState(true);
+  const pendingLeaveRef = useRef(false);
 
   useEffect(() => {
     loadProject();
@@ -68,6 +72,7 @@ export default function ProjectDetailPage() {
 
   const handleElementsGenerated = useCallback((elements: any[]) => {
     setNewElements(elements);
+    setHasUnsavedChanges(true);
     setTimeout(() => setNewElements([]), 100);
   }, []);
 
@@ -75,28 +80,31 @@ export default function ProjectDetailPage() {
     // 画布组件会处理
   }, []);
 
-  const handleMessageSent = useCallback(() => {
+  const handleAIRenderStart = useCallback(() => {
     setResetTrigger((prev) => prev + 1);
   }, []);
 
-  const handleSave = useCallback(async () => {
-    if (!project) return;
-
+  const handleSave = useCallback(async (elements: Record<string, unknown>[]) => {
     setIsSaving(true);
     try {
-      await updateProjectCanvas(projectId, project.elements);
-      const updatedProject = await getProject(projectId);
-      if (updatedProject) {
-        setProject(updatedProject);
+      const updated = await updateProjectCanvas(projectId, elements);
+      if (updated) {
+        setProject(updated);
       }
+      setHasUnsavedChanges(false);
       antMessage.success('保存成功');
+      if (pendingLeaveRef.current) {
+        pendingLeaveRef.current = false;
+        router.push('/workspace');
+      }
     } catch (error) {
       console.error('Failed to save project:', error);
       antMessage.error('保存失败');
+      pendingLeaveRef.current = false;
     } finally {
       setIsSaving(false);
     }
-  }, [project, projectId]);
+  }, [projectId, antMessage, router]);
 
   const handleSaveTrigger = useCallback(() => {
     setSaveTrigger((prev) => prev + 1);
@@ -127,6 +135,39 @@ export default function ProjectDetailPage() {
     setIsEditingName(false);
     setEditedName(project?.name || '');
   };
+
+  const handleBack = () => {
+    if (hasUnsavedChanges) {
+      setLeaveModalOpen(true);
+    } else {
+      router.push('/workspace');
+    }
+  };
+
+  const handleLeaveCancel = () => {
+    setLeaveModalOpen(false);
+  };
+
+  const handleLeaveDiscard = () => {
+    setLeaveModalOpen(false);
+    router.push('/workspace');
+  };
+
+  const handleLeaveSave = () => {
+    pendingLeaveRef.current = true;
+    setLeaveModalOpen(false);
+    setSaveTrigger((prev) => prev + 1);
+  };
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   if (isLoading) {
     return (
@@ -168,7 +209,7 @@ export default function ProjectDetailPage() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <Button type="text" icon={<ArrowLeft size={20} />} onClick={() => router.push('/workspace')} />
+          <Button type="text" icon={<ArrowLeft size={20} />} onClick={handleBack} />
 
           {isEditingName ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -194,13 +235,23 @@ export default function ProjectDetailPage() {
           )}
         </div>
 
-        <Button
-          icon={<Save size={16} />}
-          onClick={handleSaveTrigger}
-          loading={isSaving}
-        >
-          {isSaving ? '保存中...' : '保存'}
-        </Button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {!chatPanelVisible && (
+            <Button
+              type="text"
+              icon={<PanelRightOpen size={18} />}
+              onClick={() => setChatPanelVisible(true)}
+              title="显示对话面板"
+            />
+          )}
+          <Button
+            icon={<Save size={16} />}
+            onClick={handleSaveTrigger}
+            loading={isSaving}
+          >
+            {isSaving ? '保存中...' : '保存'}
+          </Button>
+        </div>
       </header>
 
       {/* 主内容区域 */}
@@ -216,23 +267,50 @@ export default function ProjectDetailPage() {
           />
         </div>
 
-        <div
-          style={{
-            width: '380px',
-            height: '100%',
-            borderRadius: '8px',
-            overflow: 'hidden',
-            border: '1px solid #e5e5e5',
-            backgroundColor: '#ffffff',
-          }}
-        >
-          <ChatPanel
-            projectId={projectId}
-            onElementsGenerated={handleElementsGenerated}
-            onMessageSent={handleMessageSent}
-          />
-        </div>
+        {chatPanelVisible && (
+          <div
+            style={{
+              width: '380px',
+              height: '100%',
+              borderRadius: '8px',
+              overflow: 'hidden',
+              border: '1px solid #e5e5e5',
+              backgroundColor: '#ffffff',
+            }}
+          >
+            <ChatPanel
+              projectId={projectId}
+              onElementsGenerated={handleElementsGenerated}
+              onAIRenderStart={handleAIRenderStart}
+              onHide={() => setChatPanelVisible(false)}
+            />
+          </div>
+        )}
       </div>
+
+      <Modal
+        title="是否保存更改？"
+        open={leaveModalOpen}
+        onCancel={handleLeaveCancel}
+        closable={!isSaving}
+        mask={{ closable: !isSaving }}
+        width={420}
+        footer={[
+          <Button key="cancel" onClick={handleLeaveCancel} disabled={isSaving}>
+            取消
+          </Button>,
+          <Button key="discard" onClick={handleLeaveDiscard} disabled={isSaving}>
+            不保存
+          </Button>,
+          <Button key="save" type="primary" onClick={handleLeaveSave} loading={isSaving}>
+            保存
+          </Button>,
+        ]}
+      >
+        <p style={{ margin: 0, color: '#555' }}>
+          当前画布有未保存的更改，是否在离开前保存？
+        </p>
+      </Modal>
     </div>
   );
 }
